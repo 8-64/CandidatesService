@@ -1,0 +1,61 @@
+# =pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Candidates service
+
+=head1 VERSION
+
+Version 0.1
+
+=head1 SYNOPSIS
+
+  # Just copy and paste it
+  # Or do more sophisticated things using your favorite redactor or IDE!
+
+=head1 DESCRIPTION
+
+Simple implementation of service that provides API for candidate search
+
+=head2 Documentation
+
+=head3 Installation
+
+..
+
+=head1 USED LIBRARIES AND DEPENDENCIES
+
+List of used libraries and dependencies:
+
+=over 4
+
+=item B<Perl>
+
+Expexted to be of version 5.24 or greater
+
+=item B<PLACK/PSGI>
+
+And bunch of corresponding libraries
+
+=back
+
+=head1 SEE ALSO
+
+Respository L<Interviewing|https://github.com/8-64/Interviewing>
+
+=head1 AUTHORS
+
+Vasyl, basilwashere[at]gmail.com, 2019
+
+=head1 CONTRIBUTING
+
+Feel free to
+
+=head1 COPYRIGHT AND LICENSE
+
+This project is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
