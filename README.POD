@@ -12,18 +12,67 @@ Version 0.1
 
 =head1 SYNOPSIS
 
-  # Just copy and paste it
-  # Or do more sophisticated things using your favorite redactor or IDE!
+  perl bin/setup-db.pl create sqlite db
+  perl bin/candidates.psgi
 
 =head1 DESCRIPTION
 
-Simple implementation of service that provides API for candidate search
+Simple implementation of service that provides an API to handle candidates
 
-=head2 Documentation
+=head2 Setup
 
-=head3 Installation
+=head3 1) Changing configuration file
 
-..
+Edit F<conf/config.yaml> - you can set up there:
+
+=over
+
+=item *
+
+preferred PSGI server
+
+=item *
+
+port to listen to
+
+=item *
+
+SSL parameters
+
+=item *
+
+Database driver and database credentials
+
+=back
+
+=head3 2) Creating the database
+
+Run C<perl bin/setup-db.pl create sqlite db> It will display something like this:
+
+  perl setup-db.pl create sqlite db
+  Running task [create_sqlite_db]
+  Running [GitHub/CandidatesService/sql/create_sqlite_db.sql]
+  Executing [DROP TABLE IF EXISTS CANDIDATES] OK
+  Executing [DROP TABLE IF EXISTS FILES] OK
+  Executing [CREATE TABLE FILES (
+      LETTER_ID VARCHAR(64) PRIMARY KEY,
+    ...] OK
+  Executing [CREATE TABLE CANDIDATES (
+      CANDIDATE_ID integer PRIMARY KEY...] OK
+      
+=head3 3) Starting the service
+
+Server may be launched this way: C<perl bin/candidates.psgi>
+
+  perl candidates.psgi
+  Starting Thrall/0.0305 (MSWin32) https server listening at port 8080
+  Thrall/0.0305 (MSWin32): Accepting connections at https://localhost:8080/
+  
+Now it's running at L<https://localhost:8080/>!
+
+=head2 Testing
+
+Tests are in the F<t> folder. C<prove> may be used to run them. At the moment there is an F<app-test.t> file that tests basics of this PLACK/PSGI based service.
 
 =head1 USED LIBRARIES AND DEPENDENCIES
 
@@ -33,11 +82,11 @@ List of used libraries and dependencies:
 
 =item B<Perl>
 
-Expexted to be of version 5.24 or greater
+Expected to be of version 5.24 or greater
 
 =item B<PLACK/PSGI>
 
-And bunch of corresponding libraries
+And a bunch of corresponding libraries
 
 =back
 
