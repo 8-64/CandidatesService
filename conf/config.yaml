@@ -1,0 +1,17 @@
+---
+plack:
+    server:  Thrall
+    port:    8080
+    host:    localhost
+    workers: 10
+    ssl:     1
+    ssl-key-file: "../crt/localhost.key"
+    ssl-cert-file: "../crt/localhost.cert"
+db:
+    driver:     SQLite
+    connection: ""
+    pass:       ""
+    login:      ""
+    AutoCommit:  1
+    PrintError:  1
+    RaiseError:  1

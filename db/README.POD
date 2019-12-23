@@ -1,0 +1,9 @@
+=pod
+
+=encoding UTF-8
+
+=head1 DESCRIPTION
+
+Git does not support empty folders, so here we go
+
+=cut
