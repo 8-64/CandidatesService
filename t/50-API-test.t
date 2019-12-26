@@ -28,6 +28,8 @@ my $test = Plack::Test->create($app);
 my @candidate_ids = ();
 my %candidate_emails = ();
 
+my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
+
 # 1-2: not found
 my $res = $test->request(GET "/BlaBlaBla");
 is($res->code, 404, 'Returned 404 code');
@@ -40,7 +42,6 @@ like($res->content, qr/Method Not Allowed/);
 
 # Post candidate -> Wrong email field
 {
-    my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
     my $data = {
         first_name        => 'Test',
         last_name         => 'mcTesty',
@@ -56,7 +57,6 @@ like($res->content, qr/Method Not Allowed/);
 
 # Post candidate -> Incorrect email field
 {
-    my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
     my $data = {
         first_name        => 'Test',
         last_name         => 'mcTesty',
@@ -72,7 +72,6 @@ like($res->content, qr/Method Not Allowed/);
 
 # Post candidate -> Everything ok
 {
-    my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
     my $data = {
         first_name        => 'Test',
         last_name         => 'mcTesty',
@@ -91,7 +90,6 @@ like($res->content, qr/Method Not Allowed/);
 
 # Same again -> error
 {
-    my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
     my $data = {
         first_name        => 'Test',
         last_name         => 'mcTesty',
@@ -104,9 +102,22 @@ like($res->content, qr/Method Not Allowed/);
     isnt($res->code, 201, 'Returned not a 201 code');
 }
 
+# Constraint: letter is too small
+{
+    my $data = {
+        first_name        => 'Test',
+        last_name         => 'mcTesty',
+        email             => 'another@spam.com',
+        motivation_letter => 'Roses are red, violets are blue',
+    };
+
+    my $body = encode_utf8(encode_json($data));
+    $res = $test->request(POST '/api/candidates', Header => $header, Content => $body);
+    isnt($res->code, 201, 'Returned not a 201 code');
+}
+
 my $circumfix = 'A';
 for (1..3) {
-    my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
     my $data = {
         first_name        => 'Test',
         last_name         => 'mcTesty',

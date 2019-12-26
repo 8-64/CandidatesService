@@ -5,8 +5,8 @@ plack:
     host:    localhost
     workers: 10
     ssl:     1
-    ssl-key-file: "../crt/localhost.key"
-    ssl-cert-file: "../crt/localhost.cert"
+    ssl-key-file: "/crt/localhost.key"
+    ssl-cert-file: "/crt/localhost.cert"
 db:
     driver:     SQLite
     connection: ""

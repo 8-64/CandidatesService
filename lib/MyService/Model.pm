@@ -16,8 +16,6 @@ BEGIN {
 }
 use lib "$root_dir/lib";
 
-use MyService::Context qw[$context];
-
 sub new {
     my ($class, $params) = @_;
     my %data = (
@@ -63,7 +61,9 @@ sub addCandidate {
             if (ref($data->{checks}->{$field}) eq 'Regexp' and !($input->{$field} =~ $data->{checks}->{$field})) {
                 return (400, "Bad Request: incorrect field [$field] supplied.");
             }
-            # TODO: sub check
+            if (ref($data->{checks}->{$field}) eq 'CODE' and !($data->{checks}->{$field}->( $input->{$field} ))) {
+                return (400, "Bad Request: field [$field] validation failed.");
+            }
         }
     }
 

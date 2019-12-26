@@ -102,7 +102,8 @@ my $api = sub {
         return [404, [ "Content-Type" => "text/plain" ], [ 'Not Found' ]];
     }
 
-    return [$code, [ "Content-Type" => "text/plain" ], [ $body ]];
+    my $c_type = ($code > 199 and $code < 300) ? 'application/json' : 'text/plain';
+    return [$code, [ "Content-Type" => $c_type ], [ $body ]];
 };
 
 # File retrieval
@@ -116,6 +117,8 @@ my $file = sub {
 # Information for debugging
 my $debug = sub {
     my $env = shift;
+    require Data::Dumper;
+    "Data::Dumper"->import();
 
     [
         200,
@@ -153,8 +156,8 @@ unless (caller) {
         '--host'    => $context->{plack}->{host},
         '--workers' => $context->{plack}->{workers},
         '--ssl'     => $context->{plack}->{ssl},
-        '--ssl-key-file'  => $context->{plack}->{'ssl-key-file'},
-        '--ssl-cert-file' => $context->{plack}->{'ssl-cert-file'},
+        '--ssl-key-file'  => $root_dir . $context->{plack}->{'ssl-key-file'},
+        '--ssl-cert-file' => $root_dir . $context->{plack}->{'ssl-cert-file'},
     );
 
     require Plack::Runner;
