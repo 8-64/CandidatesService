@@ -194,7 +194,9 @@ sub getMotivationLetterFile {
     $sth->execute or croak("Failed to fetch candidate - $DBI::err ($DBI::errstr)");
     my ($output) = $sth->fetchrow_array;
 
-    return(200, $output);
+    return length($output)
+        ? (200, $output)
+        : (404, 'File Not Found');
 }
 
 sub _generateID {
