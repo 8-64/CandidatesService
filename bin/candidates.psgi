@@ -4,7 +4,11 @@ use v5.24; # Let it be fairly modern, with stable postderef
 use warnings;
 
 use Plack::App::URLMap;
+use Plack::Builder;
 use Plack::Request;
+
+use Digest::SHA qw[sha512_base64];
+use MIME::Base64;
 
 use FindBin qw[$RealBin];
 my $root_dir;
@@ -15,6 +19,14 @@ use lib "$root_dir/lib";
 
 use MyService::Context qw[$context];
 use MyService::Model;
+
+# Utility functions
+# TODO: separate logic into modules
+sub ModuleInstalled {
+    my ($module) = @_;
+    qx[perldoc -lm $module];
+    return($? == 0 ? 1 : 0);
+}
 
 my %dispatch = (
     GET => {
@@ -40,6 +52,7 @@ my %dispatch = (
                 my ($code, $result) = MyService::Model->new($context)->deleteCandidate(@_);
                 return($code, $result);
             },
+            auth   => '_authenticate',
         },
     },
     POST => {
@@ -55,11 +68,52 @@ my %dispatch = (
                 my ($code, $result) = MyService::Model->new($context)->addCandidate(@_);
                 return($code, $result);
             },
+            auth   => '_authenticate',
         },
     },
 );
 
 # API implementation
+sub _unauthorized {
+    my $body = 'Authorization required';
+     return [
+         401,
+         [ 'Content-Type' => 'text/plain',
+           'Content-Length' => length $body,
+           'WWW-Authenticate' => 'Basic realm="Candidates Service API"' ],
+         [ $body ],
+     ]
+}
+
+sub _authenticate {
+    my($env) = @_;
+
+    my $auth = $env->{HTTP_AUTHORIZATION}
+        # For testing
+        // (exists $env->{HTTP_HEADER} ? ($env->{HTTP_HEADER} =~ /(Basic\s[a-z0-9+\/=]+)/i)[0] : undef)
+        // return _unauthorized();
+
+    # Next logic literally taken from Plack::Middleware::Auth::Basic,
+    # but here we are getting more granularity
+    # note the 'i' on the regex, as, according to RFC2617 this is a
+    # "case-insensitive token to identify the authentication scheme"
+    if ($auth =~ /^Basic (.*)$/i) {
+        my($user, $pass) = split /:/, (MIME::Base64::decode($1) || ":"), 2;
+        $pass = '' unless defined $pass;
+
+        return [200] if $context->{auth}->{disabled};
+        # User not found
+        return _unauthorized() unless exists $context->{auth}->{users}->{$user};
+        # Password is wrong
+        return _unauthorized() if (sha512_base64($pass) ne $context->{auth}->{users}->{$user}->{digest});
+
+        $env->{REMOTE_USER} = $user;
+        return [200];
+    }
+
+    return _unauthorized();
+}
+
 my $api = sub {
     my $env = shift;
 
@@ -84,11 +138,20 @@ my $api = sub {
     my $matched = 0;
     foreach my $matcher (keys $dispatch{$method}->%*) {
         if ($path =~ /$matcher/) {
-            my $checks = undef;
-            $checks = $dispatch{$method}->{$matcher}->{'checks'}
-                 if (exists $dispatch{$method}->{$matcher}->{'checks'});
+            my $entry = $dispatch{$method}->{$matcher};
 
-            ($code, $body) = $dispatch{$method}->{$matcher}->{'action'}->({
+            # Is this part restricted? If so, authenticate
+            if (exists $entry->{'auth'}) {
+                my $authenticator = \&{ $entry->{'auth'} };
+                my $auth_outcome = &{$authenticator}($env);
+                return $auth_outcome if ($auth_outcome->[0] != 200);
+            }
+
+            my $checks = undef;
+            $checks = $entry->{'checks'}
+                 if (exists $entry->{'checks'});
+
+            ($code, $body) = $entry->{'action'}->({
                 env => $env,
                 path => $path,
                 checks => $checks,
@@ -96,6 +159,7 @@ my $api = sub {
             });
 
             $matched++;
+            last;
         }
     }
     unless ($matched) {
@@ -119,11 +183,12 @@ my $debug = sub {
     my $env = shift;
     require Data::Dumper;
     "Data::Dumper"->import();
+    $Data::Dumper::Sortkeys = 1;
 
     [
         200,
-        [ "Content-Type" => "text/plain" ],
-        [ Dumper($env) . Dumper(\%ENV) ]
+        [ "Content-Type" => "text/html" ],
+        [ '<html><body><pre>' . Dumper($env) . Dumper(\%ENV) . '</pre></body></html>' ]
     ]
 };
 
@@ -136,6 +201,15 @@ my $openAPI = sub {
         [ 'API description (TBD)' ]
     ]
 };
+
+# Middleware installation
+# More debugging!
+if (ModuleInstalled('Plack::Middleware::Debug')) {
+    $debug = builder {
+        enable 'Debug';
+        $debug;
+    };
+}
 
 # Framework such as Raisin or Mojolicious or Dancer2 may be used to implement
 # more sophisticated dispatch logic, but here is quite straightforward

@@ -12,9 +12,10 @@ BEGIN {
 }
 use lib "$root_dir/lib";
 
-use Encode qw(encode_utf8);
+use Encode qw[encode_utf8];
 use JSON::MaybeXS;
-use HTTP::Request::Common;
+use HTTP::Request::Common qw[GET PUT POST DELETE];
+use MIME::Base64 ();
 use Plack::Test;
 use Test::More;
 
@@ -28,7 +29,12 @@ my $test = Plack::Test->create($app);
 my @candidate_ids = ();
 my %candidate_emails = ();
 
+# headers
 my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
+my $auth_header = [
+    Authorization =>  'Basic ' . MIME::Base64::encode('Test:Foobar', ''),
+    @$header,
+];
 
 # 1-2: not found
 my $res = $test->request(GET "/BlaBlaBla");
@@ -50,7 +56,7 @@ like($res->content, qr/Method Not Allowed/);
     };
 
     my $body = encode_utf8(encode_json($data));
-    $res = $test->request(POST '/api/candidates', Header => $header, Content => $body);
+    $res = $test->request(POST '/api/candidates', Header => $auth_header, Content => $body);
     is($res->code, 400, 'Returned 400');
     like($res->content, qr/Bad Request: field/, 'Bad request');
 }
@@ -65,7 +71,7 @@ like($res->content, qr/Method Not Allowed/);
     };
 
     my $body = encode_utf8(encode_json($data));
-    $res = $test->request(POST '/api/candidates', Header => $header, Content => $body);
+    $res = $test->request(POST '/api/candidates', Header => $auth_header, Content => $body);
     is($res->code, 400, 'Returned 400');
     like($res->content, qr/Bad Request: incorrect/, 'Bad request');
 }
@@ -82,7 +88,7 @@ like($res->content, qr/Method Not Allowed/);
     $candidate_emails{ $data->{email} }++;
 
     my $body = encode_utf8(encode_json($data));
-    $res = $test->request(POST '/api/candidates', Header => $header, Content => $body);
+    $res = $test->request(POST '/api/candidates', Header => $auth_header, Content => $body);
     is($res->code, 201, 'Returned 201 code');
     like($res->content, qr/[0-9]+/);
     push(@candidate_ids, int $res->content);
@@ -98,7 +104,7 @@ like($res->content, qr/Method Not Allowed/);
     };
 
     my $body = encode_utf8(encode_json($data));
-    $res = $test->request(POST '/api/candidates', Header => $header, Content => $body);
+    $res = $test->request(POST '/api/candidates', Header => $auth_header, Content => $body);
     isnt($res->code, 201, 'Returned not a 201 code');
 }
 
@@ -112,7 +118,7 @@ like($res->content, qr/Method Not Allowed/);
     };
 
     my $body = encode_utf8(encode_json($data));
-    $res = $test->request(POST '/api/candidates', Header => $header, Content => $body);
+    $res = $test->request(POST '/api/candidates', Header => $auth_header, Content => $body);
     isnt($res->code, 201, 'Returned not a 201 code');
 }
 
@@ -128,7 +134,7 @@ for (1..3) {
     $candidate_emails{ $data->{email} }++;
 
     my $body = encode_utf8(encode_json($data));
-    $res = $test->request(POST '/api/candidates', Header => $header, Content => $body);
+    $res = $test->request(POST '/api/candidates', Header => $auth_header, Content => $body);
     is($res->code, 201, 'Returned 201 code');
     like($res->content, qr/[0-9]+/, 'Returned an id');
     push(@candidate_ids, int $res->content);
@@ -158,7 +164,7 @@ candidateIDsMatch();
 # Delete a second candidate
 {
     my $cid = splice(@candidate_ids, 1, 1);
-    $res = $test->request(HTTP::Request::Common::DELETE "/api/candidates/$cid");
+    $res = $test->request(DELETE "/api/candidates/$cid", Header => $auth_header, Content => '');
     is($res->code, 204, 'Returned 204 code');
     like($res->content, qr/No Content/, 'Response ok');
 }

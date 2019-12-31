@@ -24,7 +24,12 @@ my $app = do "$root_dir/bin/candidates.psgi";
 
 my $test = Plack::Test->create($app);
 
+# headers
 my $header = ['Content-Type' => 'application/json; charset=UTF-8'];
+my $auth_header = [
+    Authorization =>  'Basic ' . MIME::Base64::encode('Test:Foobar', ''),
+    @$header,
+];
 my $candidate_id;
 my $file_link;
 my $motivation_letter = 'Ipsum lorem something ' x 100;
@@ -39,7 +44,7 @@ my $data = {
 # 1) Create an entry and a file
 {
     my $body = encode_utf8(encode_json($data));
-    my $res = $test->request(POST '/api/candidates', Header => $header, Content => $body);
+    my $res = $test->request(POST '/api/candidates', Header => $auth_header, Content => $body);
     is($res->code, 201, 'Returned 201 code');
     like($res->content, qr/[0-9]+/);
     $candidate_id = int $res->content;
@@ -65,7 +70,7 @@ my $data = {
 
 # 4) Remove the entry
 {
-    my $res = $test->request(HTTP::Request::Common::DELETE "/api/candidates/$candidate_id");
+    my $res = $test->request(HTTP::Request::Common::DELETE "/api/candidates/$candidate_id", Header => $auth_header);
     is($res->code, 204, 'Returned 204 code');
     like($res->content, qr/No Content/, 'Deleted ok');
 }

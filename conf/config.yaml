@@ -12,6 +12,12 @@ db:
     connection: ""
     pass:       ""
     login:      ""
-    AutoCommit:  1
-    PrintError:  1
-    RaiseError:  1
+    AutoCommit: 1
+    PrintError: 1
+    RaiseError: 1
+auth:
+    disabled: 0
+    users:
+        Test:
+            # Foobar
+            digest: zq0fWamg0i5Goo+UOmYjON11jW3OOPfqarE7ZhXDEraf//8El4HBabWXV3y1Vm1dE1Q2SsAyqdTVvY74MzQAYQ
