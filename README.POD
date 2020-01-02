@@ -43,6 +43,10 @@ SSL parameters
 
 Database driver and database credentials
 
+=item *
+
+Whether authentification is enabled, plus allowed users and password digests
+
 =back
 
 =head3 2) Creating the database
@@ -72,7 +76,21 @@ Now it's running at L<https://localhost:8080/>!
 
 =head2 Testing
 
-Tests are in the F<t> folder. C<prove> may be used to run them. At the moment there is an F<app-test.t> file that tests basics of this PLACK/PSGI based service.
+Tests are in the F<t> folder. C<prove> may be used to run them. They test basics of this Plack/PSGI based service. Ex:
+
+  CandidatesService>prove
+  t\10-Modules-ok.t ... ok
+  t\30-DB-basic.t ..... ok
+  t\50-API-test.t ..... 1/? 
+  t\50-API-test.t ..... ok
+  t\55-API-fileops.t .. ok
+  All tests successful.
+  Files=4, Tests=45,  5 wallclock secs ( 0.05 usr +  0.05 sys =  0.09 CPU)
+  Result: PASS
+  
+=head2 OpenAPI endpoint
+
+OpenAPI endpoint is exposed at I</openapi.json> and I</openapi.yaml> addresses (responding with JSON or YAML documents).
 
 =head1 USED LIBRARIES AND DEPENDENCIES
 
