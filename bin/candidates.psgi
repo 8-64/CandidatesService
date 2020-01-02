@@ -19,56 +19,72 @@ use lib "$root_dir/lib";
 
 use MyService::Context qw[$context];
 use MyService::Model;
-
-# Utility functions
-# TODO: separate logic into modules
-sub ModuleInstalled {
-    my ($module) = @_;
-    qx[perldoc -lm $module];
-    return($? == 0 ? 1 : 0);
-}
+use MyService::OpenAPI;
+use MyService::Util qw[ModuleInstalled];
 
 my %dispatch = (
     GET => {
         qr/candidates.[0-9]+$/ => {
-            comment => "Candidate info or 4xx",
-            action  => sub {
+            description => "Candidate info or 4xx",
+            action      => sub {
                 my ($code, $result) = MyService::Model->new($context)->getCandidate(@_);
                 return($code, $result);
             },
+            path        => '/candidates/{id}',
+            responses   => {
+                200 => {
+                    description => 'OK, retrieved'
+                },
+            },
         },
         qr/candidates$/ => {
-            comment => "All the candidates info or 4xx",
-            action  => sub {
+            description => "All the candidates info or 4xx",
+            action      => sub {
                 my ($code, $result) =  MyService::Model->new($context)->getAllCandidates();
                 return($code, $result);
+            },
+            responses   => {
+                200 => {
+                    description => 'OK, retrieved'
+                },
             },
         },
     },
     DELETE => {
         qr/candidates.[0-9]+$/ => {
-            comment => "Delete candidate info or 4xx",
-            action  => sub {
+            description => "Delete candidate info or 4xx",
+            action      => sub {
                 my ($code, $result) = MyService::Model->new($context)->deleteCandidate(@_);
                 return($code, $result);
             },
-            auth   => '_authenticate',
+            auth        => '_authenticate',
+            path        => '/candidates/{id}',
+            responses   => {
+                204 => {
+                    description => 'OK, deleted'
+                },
+            },
         },
     },
     POST => {
         qr/candidates$/ => {
-            comment => "Create candidate info",
-            checks  => {
+            description => "Create candidate info",
+            checks      => {
                 first_name        => qr/^[[:graph:]]+$/,
                 last_name         => qr/^[[:graph:]]+$/,
                 email             => qr/^[[:alnum:]._]+@[[:alnum:]._]+[[:alnum:]]$/,
                 motivation_letter => sub { length($_[0]) > 200 },
             },
-            action  => sub {
+            action      => sub {
                 my ($code, $result) = MyService::Model->new($context)->addCandidate(@_);
                 return($code, $result);
             },
-            auth   => '_authenticate',
+            auth       => '_authenticate',
+            responses => {
+                201 => {
+                    description => 'OK, created'
+                },
+            }
         },
     },
 );
@@ -195,10 +211,34 @@ my $debug = sub {
 my $openAPI = sub {
     my $env = shift;
 
+    my $api_desc = MyService::OpenAPI->new();
+    $api_desc->info(
+        version => "0.1",
+        title   => "MyService API",
+        description => "Expanded description of MyService API",
+        license => {
+            name => 'Perl',
+            url => 'https://dev.perl.org/licenses/'
+        },
+        contact => {
+            name => 'MyService contact',
+            email => 'spam@spam.com',
+        }
+    );
+    $api_desc->describe(\%dispatch);
+
+    my $req = Plack::Request->new($env);
+
+    say $req->script_name . $req->path;
+
+    my ($body, $c_type) = (($req->script_name . $req->path) =~ m/\.json/)
+        ? ($api_desc->to_json, "application/json")
+        : ($api_desc->to_yaml, "application/x-yaml");
+
     [
         200,
-        [ "Content-Type" => "text/plain" ],
-        [ 'API description (TBD)' ]
+        [ "Content-Type" => $c_type ],
+        [ $body ]
     ]
 };
 
@@ -218,7 +258,8 @@ my $urlmap = Plack::App::URLMap->new;
 $urlmap->map("/api" => $api);
 $urlmap->map("/file" => $file);
 $urlmap->map("/debug" => $debug);
-$urlmap->map("/swagger.json" => $openAPI);
+$urlmap->map("/openapi.json" => $openAPI);
+$urlmap->map("/openapi.yaml" => $openAPI);
 $urlmap->map("/" =>  sub { [404, [ "Content-Type" => "text/plain" ], [ '404 Not Found' ]] });
 my $app = $urlmap->to_app;
 
