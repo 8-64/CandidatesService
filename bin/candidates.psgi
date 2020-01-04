@@ -136,7 +136,7 @@ my $api = sub {
     my ($code, $body);
     my $req = Plack::Request->new($env);
 
-    if (defined $req->content_length and $req->content_length >  1024**2) {
+    if (defined $req->content_length and $req->content_length > $context->{service}->{max_request}) {
         return [413, [ "Content-Type" => "text/plain" ], [ 'Payload Too Large' ]];
     }
 
@@ -273,6 +273,7 @@ unless (caller) {
         '--ssl'     => $context->{plack}->{ssl},
         '--ssl-key-file'  => $root_dir . $context->{plack}->{'ssl-key-file'},
         '--ssl-cert-file' => $root_dir . $context->{plack}->{'ssl-cert-file'},
+        @ARGV
     );
 
     require Plack::Runner;

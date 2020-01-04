@@ -1,23 +1,26 @@
 ---
-plack:
-    server:  Thrall
-    port:    8080
-    host:    localhost
-    workers: 10
-    ssl:     1
-    ssl-key-file: "/crt/localhost.key"
-    ssl-cert-file: "/crt/localhost.cert"
-db:
-    driver:     SQLite
-    connection: ""
-    pass:       ""
-    login:      ""
-    AutoCommit: 1
-    PrintError: 1
-    RaiseError: 1
 auth:
     disabled: 0
     users:
+        Another:
+            pass: ABC123abc@_
         Test:
-            # Foobar
             digest: zq0fWamg0i5Goo+UOmYjON11jW3OOPfqarE7ZhXDEraf//8El4HBabWXV3y1Vm1dE1Q2SsAyqdTVvY74MzQAYQ
+db:
+    AutoCommit: 1
+    PrintError: 1
+    RaiseError: 1
+    connection: ''
+    driver: SQLite
+    login: ''
+    pass: ''
+plack:
+    host: localhost
+    port: 8080
+    server: Thrall
+    ssl: 1
+    ssl-cert-file: /crt/localhost.cert
+    ssl-key-file: /crt/localhost.key
+    workers: 10
+service:
+    max_request: 2048000
