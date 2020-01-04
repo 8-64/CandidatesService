@@ -24,7 +24,7 @@ RUN cpm install --global Plack DBI DBD::SQLite YAML Thrall Gazelle Starman Class
 RUN prove
 
 # Configure to run in container
-RUN perl bin/setup.pl plack/host=0.0.0.0
+RUN perl bin/setup.pl plack/host=0.0.0.0 passwords permissions
 
 EXPOSE 8080
 
