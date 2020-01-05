@@ -24,3 +24,5 @@ plack:
     workers: 10
 service:
     max_request: 2048000
+    logging: 0
+    log_config: conf/Log4perl.conf

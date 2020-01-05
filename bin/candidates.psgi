@@ -22,6 +22,10 @@ use MyService::Model;
 use MyService::OpenAPI;
 use MyService::Util qw[ModuleInstalled];
 
+use Log::Log4perl;
+use Log::Log4perl::Level;
+use Log::Dispatch::FileRotate;
+
 my %dispatch = (
     GET => {
         qr/candidates.[0-9]+$/ => {
@@ -262,6 +266,19 @@ $urlmap->map("/openapi.json" => $openAPI);
 $urlmap->map("/openapi.yaml" => $openAPI);
 $urlmap->map("/" =>  sub { [404, [ "Content-Type" => "text/plain" ], [ '404 Not Found' ]] });
 my $app = $urlmap->to_app;
+
+# Store access log, if enabled
+if ($context->{service}->{logging}) {
+    Log::Log4perl->init($context->{service}->{log_config});
+    my $log = Log::Log4perl->get_logger();
+
+    $app = builder {
+        enable "Plack::Middleware::AccessLog",
+        format => '%t "%r" %h %u %>s %b "%{Referer}i" "%{User-agent}i"',
+        logger => sub { $log->debug(@_) };
+        $app;
+    };
+}
 
 # Standalone implementation. May be run without "plackup" script
 unless (caller) {
