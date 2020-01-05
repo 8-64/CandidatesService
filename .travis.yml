@@ -22,7 +22,6 @@ before_install:
 
 install:
   - ./dependencies.sh
-  - perl bin/setup.pl passwords permissions
   - ls -ahl conf crt
   - cpan-install --coverage
 
