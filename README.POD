@@ -1,6 +1,11 @@
-# =pod
+=pod
 
 =encoding UTF-8
+
+=head1 CI stats and badges
+
+=for HTML <a href="https://travis-ci.org/8-64/CandidatesService"><img src="https://travis-ci.org/8-64/CandidatesService.svg?branch=master" hspace="1%"/></a><a href="https://codecov.io/gh/8-64/CandidatesService"><img src="https://codecov.io/gh/8-64/CandidatesService/branch/master/graph/badge.svg" hspace="1%"/></a>
+<p><img src="https://img.shields.io/badge/perl-v5.24-camel" hspace="1%"/><img src="https://img.shields.io/github/languages/code-size/8-64/CandidatesService" hspace="1%"/><img src="https://img.shields.io/github/repo-size/8-64/CandidatesService" hspace="1%"/></p>
 
 =head1 NAME
 
@@ -47,6 +52,10 @@ Database driver and database credentials
 
 Whether authentification is enabled, plus allowed users and password digests
 
+=item *
+
+Maximum request size
+
 =back
 
 =head3 2) Creating the database
@@ -73,6 +82,13 @@ Server may be launched this way: C<perl bin/candidates.psgi>
   Thrall/0.0305 (MSWin32): Accepting connections at https://localhost:8080/
   
 Now it's running at L<https://localhost:8080/>!
+
+=head2 Setup (using Docker)
+
+Alternatively, image may be built using F<Dockerfile> and then containerized service may be started. Ex:
+
+  docker image build -t perl_api_service .
+  docker run -p 8080:8080 perl_api_service --server Starman
 
 =head2 Testing
 
