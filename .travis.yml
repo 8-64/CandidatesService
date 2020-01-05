@@ -1,0 +1,38 @@
+language: perl
+perl:
+    - "5.24"
+    - "5.26"
+    - "5.28"
+    - "5.30"
+
+before_install:
+# Classical steps
+  - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
+  - source ~/travis-perl-helpers/init
+  - build-perl
+  - perl -V
+
+# Extract the build logic from Dockerfile
+  - ls -ahl
+  - perl -nE 'BEGIN{$i=0};if (/^RUN/){ print s/^RUN\s+//r; $i++ if(m:\s+\\\s?\Z:); next;} if ($i) {print;$i--}' Dockerfile > dependencies.sh
+# More permissions
+  - chmod +x ./dependencies.sh
+  - chmod +x bin/*.pl
+  - chmod +x bin/*.psgi
+
+install:
+  - ./dependencies.sh
+  - perl bin/setup.pl passwords permissions
+  - ls -ahl conf crt
+  - cpan-install --coverage
+
+# Code coverage 
+before_script:
+  - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Codecov 
+  
+script:
+  - cover -delete
+  - HARNESS_PERL_SWITCHES="-MDevel::Cover=+ignore,^local/|^t/" prove -r t
+
+after_success:
+  - cover -report codecov
