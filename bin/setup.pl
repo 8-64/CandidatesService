@@ -27,7 +27,7 @@ for (@ARGV) {
     if(/perm(issions)?/i) { fix_permissions(); next }
     if(/pass(word)?/i)    { hash_passwords(); next }
     if(/[\w]=[\w]?/)      { set_value($_); next }
-    if(/[\w]\?/)          { get_value($_); next }
+    if(/[\w]\?$/)         { get_value($_); next }
     say "Unknown command: " . $_;
     pod2usage(0);
 }
@@ -90,6 +90,7 @@ sub set_value {
     $hr->{$key} = $value;
 
     say "Writing $path -> $value into $file";
+    $conf->{info}->{modified} = 'Last time modified on ' . scalar localtime . " (changed $path)";
     _save_config($conf, $file);
 }
 

@@ -271,8 +271,14 @@ unless (caller) {
         '--host'    => $context->{plack}->{host},
         '--workers' => $context->{plack}->{workers},
         '--ssl'     => $context->{plack}->{ssl},
-        '--ssl-key-file'  => $root_dir . $context->{plack}->{'ssl-key-file'},
-        '--ssl-cert-file' => $root_dir . $context->{plack}->{'ssl-cert-file'},
+        # Conditionally include SSL parameters if it is enabled
+        # Different servers use different names for them
+        (
+            '--ssl-key-file'  => $root_dir . $context->{plack}->{'ssl-key-file'},
+            '--ssl-cert-file' => $root_dir . $context->{plack}->{'ssl-cert-file'},
+            '--ssl-key'       => $root_dir . $context->{plack}->{'ssl-key-file'},
+            '--ssl-cert'      => $root_dir . $context->{plack}->{'ssl-cert-file'},
+        ) x ($context->{plack}->{ssl}),
         @ARGV
     );
 
