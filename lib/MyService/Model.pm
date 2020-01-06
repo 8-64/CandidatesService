@@ -71,17 +71,7 @@ sub addCandidate {
 
     my $dbh = $self->getDBH;
 
-    # Save the file
     my $sth = $dbh->prepare('
-INSERT INTO FILES
-        (LETTER_ID, LETTER_CONTENT)
-VALUES (?, ?);
-') or croak("Failed to prepare statement - $DBI::err ($DBI::errstr)");
-    $sth->bind_param(1, $letter_id);
-    $sth->bind_param(2, $input->{motivation_letter});
-    $sth->execute or croak("Failed to add candidate - $DBI::err ($DBI::errstr)");
-
-    $sth = $dbh->prepare('
 INSERT INTO CANDIDATES
         (FIRST_NAME, LAST_NAME, EMAIL, LETTER_ID)
 VALUES (?, ?, ?, ?);
@@ -90,6 +80,16 @@ VALUES (?, ?, ?, ?);
     $sth->bind_param(2, $input->{last_name});
     $sth->bind_param(3, $input->{email});
     $sth->bind_param(4, $letter_id);
+    $sth->execute or croak("Failed to add candidate - $DBI::err ($DBI::errstr)");
+
+    # Save the file
+    $sth = $dbh->prepare('
+INSERT INTO FILES
+        (LETTER_ID, LETTER_CONTENT)
+VALUES (?, ?);
+') or croak("Failed to prepare statement - $DBI::err ($DBI::errstr)");
+    $sth->bind_param(1, $letter_id);
+    $sth->bind_param(2, $input->{motivation_letter});
     $sth->execute or croak("Failed to add candidate - $DBI::err ($DBI::errstr)");
 
     $sth = $dbh->prepare("SELECT CANDIDATE_ID FROM CANDIDATES WHERE LETTER_ID = '$letter_id';")
