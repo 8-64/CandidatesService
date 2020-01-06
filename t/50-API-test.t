@@ -169,6 +169,14 @@ candidateIDsMatch();
     like($res->content, qr/No Content/, 'Response ok');
 }
 
+# Unauthorized request
+{
+    my $cid = $candidate_ids[0];
+    $res = $test->request(DELETE "/api/candidates/$cid", Header => $header);
+    is($res->code, 401, 'Returned 401 code');
+    like($res->content, qr/Authorization required/i, 'Response ok - authorization reqired');
+}
+
 # Candidate ID indeed is deleted; all mails are ok
 {
     my $candidates = candidateIDsMatch();
