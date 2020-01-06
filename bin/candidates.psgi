@@ -7,9 +7,6 @@ use Plack::App::URLMap;
 use Plack::Builder;
 use Plack::Request;
 
-use Digest::SHA qw[sha512_base64];
-use MIME::Base64;
-
 use FindBin qw[$RealBin];
 my $root_dir;
 BEGIN {
@@ -17,6 +14,7 @@ BEGIN {
 }
 use lib "$root_dir/lib";
 
+use MyService::Auth;
 use MyService::Context qw[$context];
 use MyService::Model;
 use MyService::OpenAPI;
@@ -94,46 +92,6 @@ my %dispatch = (
 );
 
 # API implementation
-sub _unauthorized {
-    my $body = 'Authorization required';
-     return [
-         401,
-         [ 'Content-Type' => 'text/plain',
-           'Content-Length' => length $body,
-           'WWW-Authenticate' => 'Basic realm="Candidates Service API"' ],
-         [ $body ],
-     ]
-}
-
-sub _authenticate {
-    my($env) = @_;
-
-    my $auth = $env->{HTTP_AUTHORIZATION}
-        # For testing
-        // (exists $env->{HTTP_HEADER} ? ($env->{HTTP_HEADER} =~ /(Basic\s[a-z0-9+\/=]+)/i)[0] : undef)
-        // return _unauthorized();
-
-    # Next logic literally taken from Plack::Middleware::Auth::Basic,
-    # but here we are getting more granularity
-    # note the 'i' on the regex, as, according to RFC2617 this is a
-    # "case-insensitive token to identify the authentication scheme"
-    if ($auth =~ /^Basic (.*)$/i) {
-        my($user, $pass) = split /:/, (MIME::Base64::decode($1) || ":"), 2;
-        $pass = '' unless defined $pass;
-
-        return [200] if $context->{auth}->{disabled};
-        # User not found
-        return _unauthorized() unless exists $context->{auth}->{users}->{$user};
-        # Password is wrong
-        return _unauthorized() if (sha512_base64($pass) ne $context->{auth}->{users}->{$user}->{digest});
-
-        $env->{REMOTE_USER} = $user;
-        return [200];
-    }
-
-    return _unauthorized();
-}
-
 my $api = sub {
     my $env = shift;
 
