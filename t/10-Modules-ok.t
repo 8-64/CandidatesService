@@ -11,15 +11,24 @@ BEGIN {
 use lib "$root_dir/lib";
 
 use Test::More;
+use Test::Pod;
 
 BEGIN {
     my @modules = qw[
+        MyService::Auth
         MyService::Context
         MyService::Model
+        MyService::OpenAPI
+        MyService::Util
     ];
+
+    plan tests => scalar(@modules) * 2;
 
     foreach my $module (@modules) {
         use_ok($module);
+        my $file = "$module.pm";
+        $file =~ s[::][/];
+        Test::Pod::pod_file_ok($INC{$file});
     }
 }
 
