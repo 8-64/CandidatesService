@@ -18,7 +18,7 @@ RUN cpanm --force Time::Zone
 # Faster installer
 RUN cpanm App::cpm
 # Even faster installer
-RUN cpm install --global Plack DBI DBD::SQLite YAML Thrall Gazelle Starman Class::Accessor::Fast Plack::Middleware::Debug Regexp::Common IO::Socket::SSL Log::Log4perl Log::Dispatch::FileRotate
+RUN cpm install --global Plack DBI DBD::SQLite YAML Thrall Gazelle Starman Class::Accessor::Fast Plack::Middleware::Debug Regexp::Common IO::Socket::SSL Log::Log4perl Log::Dispatch::FileRotate JSON::Validator
 
 # Test it
 RUN prove

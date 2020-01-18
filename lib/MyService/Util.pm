@@ -5,15 +5,28 @@ use warnings;
 
 our $VERSION = v0.1;
 
+use Carp;
 use Exporter qw[import];
 our @ISA = ('Exporter');
-our @EXPORT_OK = qw[ModuleInstalled];
+our @EXPORT_OK = qw[
+    ModuleInstalled
+    SysSlurp
+];
 
 # Is this module available?
 sub ModuleInstalled {
     my ($module) = @_;
     qx[perldoc -lm $module];
     return($? == 0 ? 1 : 0);
+}
+
+# sysread()-based file slurp
+sub SysSlurp {
+    my ($file, $var) = @_;
+    open(my $FH, '<', $file) or croak("Failed to open $file: [$!]!");
+    sysread($FH, $var, -s $file) or croak("Failed to read $file: [$!]!");
+    close $FH;
+    return $var if (defined wantarray);
 }
 
 1;
@@ -26,7 +39,7 @@ __END__
 
 =head1 NAME
 
-MyService::Util -provides utility functions for REST service
+MyService::Util - provides utility functions for REST service
 
 =head1 VERSION
 

@@ -27,7 +27,7 @@ BEGIN {
     foreach my $module (@modules) {
         use_ok($module);
         my $file = "$module.pm";
-        $file =~ s[::][/];
+        $file =~ s[::][/]g;
         Test::Pod::pod_file_ok($INC{$file});
     }
 }
