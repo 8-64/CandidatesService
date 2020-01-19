@@ -22,13 +22,16 @@ BEGIN {
         MyService::Util
     ];
 
-    plan tests => scalar(@modules) * 2;
+    plan tests => scalar(@modules) * 3;
 
     foreach my $module (@modules) {
         use_ok($module);
+
         my $file = "$module.pm";
         $file =~ s[::][/]g;
         Test::Pod::pod_file_ok($INC{$file});
+
+        is(ref(\eval $module->VERSION()), 'VSTRING', "[$module] has a version set");
     }
 }
 

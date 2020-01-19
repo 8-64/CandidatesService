@@ -50,6 +50,8 @@ say "Running [$sql_script]";
 my $sql_splitter = SQL::SplitStatement->new;
 my @statements = $sql_splitter->split($sql);
 
+$dbh->begin_work or croak('Failed to start transactions: ' . $dbh->errstr);
+
 foreach my $statement (@statements) {
     my $info = $statement;
     if (length($info) > 65) {
@@ -60,12 +62,21 @@ foreach my $statement (@statements) {
     # Fix Oracle quirks
     $statement =~ s/(?<=\s)END\z/END;/i;
 
-    my $sth = $dbh->prepare($statement) or croak "Failure - error $DBI::err ($DBI::errstr)";
+    eval {
+        my $sth = $dbh->prepare($statement) or croak "Failure - error $DBI::err ($DBI::errstr)";
 
-    $sth->execute or croak "Failure - error $DBI::err ($DBI::errstr)";
+        $sth->execute or croak "Failure - error $DBI::err ($DBI::errstr)";
+    };
+    if ($@) {
+        say 'FAIL';
+        $dbh->rollback or croak('Failed to roll back: ' . $dbh->errstr);
+        exit 1;
+    }
 
     say 'OK';
 }
+
+$dbh->commit or croak('Failed to commit: ' . $dbh->errstr);
 
 exit 0;
 
