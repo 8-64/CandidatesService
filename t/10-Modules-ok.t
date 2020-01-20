@@ -22,7 +22,7 @@ BEGIN {
         MyService::Util
     ];
 
-    plan tests => scalar(@modules) * 3;
+    plan tests => scalar(@modules) * 4;
 
     foreach my $module (@modules) {
         use_ok($module);
@@ -32,6 +32,8 @@ BEGIN {
         Test::Pod::pod_file_ok($INC{$file});
 
         is(ref(\eval $module->VERSION()), 'VSTRING', "[$module] has a version set");
+
+        like(qx[$^X -MO=Lint $root_dir/lib/$file 2>&1], qr/syntax\s+ok/ims, "[$module] syntaxis check");
     }
 }
 

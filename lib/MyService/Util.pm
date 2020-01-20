@@ -9,9 +9,21 @@ use Carp;
 use Exporter qw[import];
 our @ISA = ('Exporter');
 our @EXPORT_OK = qw[
+    LazyUse
     ModuleInstalled
     SysSlurp
 ];
+
+# Lazy use
+sub LazyUse {
+    my ($module, @args) = @_;
+    $module = "$module.pm";
+    $module =~ s[::][/]g;
+    unless (exists $INC{$module}) {
+        require $module;
+        $module->import(@args);
+    }
+}
 
 # Is this module available?
 sub ModuleInstalled {

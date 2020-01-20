@@ -18,11 +18,7 @@ use MyService::Auth;
 use MyService::Context qw[$context];
 use MyService::Model;
 use MyService::OpenAPI;
-use MyService::Util qw[ModuleInstalled];
-
-use Log::Log4perl;
-use Log::Log4perl::Level;
-use Log::Dispatch::FileRotate;
+use MyService::Util qw[ModuleInstalled LazyUse];
 
 my %dispatch = (
     GET => {
@@ -159,8 +155,7 @@ my $file = sub {
 # Information for debugging
 my $debug = sub {
     my $env = shift;
-    require Data::Dumper;
-    "Data::Dumper"->import();
+    LazyUse('Data::Dumper');
     $Data::Dumper::Sortkeys = 1;
 
     [
@@ -227,6 +222,10 @@ my $app = $urlmap->to_app;
 
 # Store access log, if enabled
 if ($context->{service}->{logging}) {
+    LazyUse('Log::Log4perl');
+    LazyUse('Log::Log4perl::Level');
+    LazyUse('Log::Dispatch::FileRotate');
+
     Log::Log4perl->init($context->{service}->{log_config});
     my $log = Log::Log4perl->get_logger();
 
